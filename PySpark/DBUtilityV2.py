@@ -33,9 +33,6 @@ def ReadFromDb(db_name,tbl_name):
 
 
 
-
-
-
 def WriteToDb(dfname,dbname, tbl_name):
     url = "jdbc:mysql://localhost:3306/{}".format(dbname)
     driver = 'com.mysql.jdbc.Driver'
@@ -172,15 +169,17 @@ def main():
         etlToSTGRecCount = CheckMetricesForStage(rec)
         Result.append(etlToSTGRecCount)
 
-
-        #print(Result)
     etlToSTGFinalResult =spark.createDataFrame(Result,ResultSchema)
     etlToSTGFinalResult.show()
-    WriteToDb(etlToSTGFinalResult,'etl','audit')
-    writeToDB = etlToSTGFinalResult.write
-    #esultRDD = sc.parallelize(Result,ResultSchema)
-
-
+    
+    # Write Final table to CSV/Table
+    WriteToDb(etlToSTGFinalResult,'etl','audit')  # To Write Final Dataframe Into Table
+    etlToSTGFinalResult.repartition(1)\           # To Write Final Dataframe Into CSV Final
+                       .write \
+                       .mode('overwrite')\
+                       .csv("AuditTblFinalReport.csv")
+    
+    
 
 if __name__ == "__main__":
     main()
